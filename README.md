@@ -13,7 +13,7 @@ For a detailed look at the system design and data flow, please see the [Architec
 The repository is organized into two main directories:
 
 *   **`frontend/`**: Contains the client application built with Next.js 16, React 19, and TypeScript. Handles all UI, state management (Zustand), and data fetching (React Query).
-*   **`backend/`**: Contains the server application (typically Django/Python). Manages business logic, database models, and provides the REST/GraphQL API.
+*   **`backend/`**: Contains the server application (typically Django/Python). Manages business logic, database models, and provides the REST API.
 
 ## 🛠 Prerequisites
 
