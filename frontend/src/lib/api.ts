@@ -1,72 +1,85 @@
 import { Category, Todo, TodoInput } from "./types";
 import Cookies from "js-cookie";
 
-// Helper function to get the current access token
-const getAccessToken = () => {
-    return Cookies.get("access_token") || null;
+const getCsrfToken = () => {
+    return Cookies.get("csrftoken") || "";
 };
 
-// Centralized API handler
+// --- Concurrency Lock Variables ---
+let isRefreshing = false;
+// A queue of promises waiting for the refresh to complete
+let refreshSubscribers: Array<(error: Error | null) => void> = [];
+
+// Helper to resolve or reject all waiting requests
+const onRefreshed = (error: Error | null) => {
+    refreshSubscribers.forEach((callback) => callback(error));
+    refreshSubscribers = [];
+};
+// ----------------------------------
+
 export const apiFetch = async <T>(
     endpoint: string,
     options: RequestInit = {}
 ): Promise<T> => {
-    const token = getAccessToken();
     const headers = new Headers(options.headers || {});
-
     headers.set("Content-Type", "application/json");
-    if (token) {
-        headers.set("Authorization", `Bearer ${token}`);
+
+    const method = options.method?.toUpperCase() || "GET";
+    if (!["GET", "HEAD", "OPTIONS", "TRACE"].includes(method)) {
+        const csrfToken = getCsrfToken();
+        if (csrfToken) headers.set("X-CSRFToken", csrfToken);
     }
 
-    const response = await fetch(`/api${endpoint}`, {
+    const fetchOptions: RequestInit = {
         ...options,
         headers,
-    });
+        credentials: "include",
+    };
 
-    // Handle 401 Unauthorized - attempt token refresh
+    const response = await fetch(`/api${endpoint}`, fetchOptions);
+
     if (response.status === 401) {
-        const refreshToken = Cookies.get("refresh_token");
-        
-        if (refreshToken) {
+        if (!isRefreshing) {
+            isRefreshing = true;
             try {
-                // Attempt to refresh the token
-                const refreshResponse = await fetch("/api/token/refresh", {
+                const refreshResponse = await fetch("/api/token/refresh/", {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ refresh: refreshToken }),
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": getCsrfToken(),
+                    },
+                    credentials: "include",
                 });
 
-                if (refreshResponse.ok) {
-                    const data = await refreshResponse.json();
-                    Cookies.set("access_token", data.access);
-                    // SimpleJWT rotate token might return a new refresh token too
-                    if (data.refresh) {
-                        Cookies.set("refresh_token", data.refresh);
-                    }
-
-                    // Retry the original request with the new token
-                    headers.set("Authorization", `Bearer ${data.access}`);
-                    const retryResponse = await fetch(`/api${endpoint}`, {
-                        ...options,
-                        headers,
-                    });
-
-                    if (retryResponse.ok) {
-                        if (retryResponse.status === 204) return {} as T;
-                        return retryResponse.json();
-                    }
+                if (!refreshResponse.ok) {
+                    throw new Error("Session expired");
                 }
+
+                onRefreshed(null);
+
+                return apiFetch<T>(endpoint, options);
+
             } catch (error) {
                 console.error("Token refresh failed:", error);
-            }
-        }
 
-        // If refresh fails or no refresh token, log out
-        Cookies.remove("access_token");
-        Cookies.remove("refresh_token");
-        if (typeof window !== "undefined") {
-            window.location.reload();
+                onRefreshed(error as Error);
+
+                if (typeof window !== "undefined") {
+                    window.location.href = "/login";
+                }
+                throw error;
+            } finally {
+                isRefreshing = false;
+            }
+        } else {
+            return new Promise((resolve, reject) => {
+                refreshSubscribers.push((error) => {
+                    if (error) {
+                        return reject(error);
+                    }
+                    resolve(apiFetch<T>(endpoint, options));
+                });
+            });
         }
     }
 
@@ -75,14 +88,12 @@ export const apiFetch = async <T>(
         throw new Error(errorData?.detail || `API Error: ${response.statusText}`);
     }
 
-    // Handle 204 No Content
     if (response.status === 204) {
         return {} as T;
     }
 
     return response.json();
 };
-
 
 export const todosApi = {
     list: (categoryId?: number) => {

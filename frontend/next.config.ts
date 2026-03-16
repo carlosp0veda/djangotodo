@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/api/:path*",
-        destination: `${process.env.DJANGO_API_URL}/:path*`, // Proxy to Backend
+        destination: `${process.env.DJANGO_API_URL}/api/:path*`, // Proxy to Backend
 
       },
     ];

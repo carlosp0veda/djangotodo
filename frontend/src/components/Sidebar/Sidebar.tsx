@@ -14,7 +14,7 @@ export default function Sidebar() {
     return (
         <aside className={styles.sidebar}>
             <div className={styles.section}>
-                <h2 className={styles.sectionTitle}>All Categories</h2>
+                <h2 className={styles.sectionTitle} onClick={() => store.setFilterCategoryId(null)}>All Categories</h2>
                 <nav className={styles.nav}>
                     {categories.map((cat) => (
                         <button

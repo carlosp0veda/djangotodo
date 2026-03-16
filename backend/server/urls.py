@@ -17,16 +17,14 @@ Including another URLconf
 from django.conf import settings
 from django.contrib import admin
 from django.urls import path, include
-from core.views import RegisterApi
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-)
+from core.views import RegisterApi, LoginApi, LogoutApi, CookieTokenObtainPairView, CookieTokenRefreshView
 
 urlpatterns = [
     path(settings.ADMIN_PATH, admin.site.urls),
     path('api/register', RegisterApi.as_view(), name='register'),
-    path('api/token', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/login', LoginApi.as_view(), name='login'),
+    path('api/token', CookieTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh', CookieTokenRefreshView.as_view(), name='token_refresh'),
+    path('api/logout', LogoutApi.as_view(), name='logout'),
     path('api/', include('todo.urls')),
 ]

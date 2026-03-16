@@ -42,9 +42,9 @@ Navigate to the backend directory and set up your Python environment:
 
 ```bash
 cd backend
-python -m venv .venv
-source .venv/bin/activate  # ßOn Windows use `.venv\Scripts\activate`
-pip install -r requirements.txt
+python -m venv .venv # or python3 -m venv .venv
+source .venv/bin/activate  # On Windows use `.venv\Scripts\activate`
+pip install -r requirements.txt # or pip3 install -r requirements.txt
 ```
 
 Set up your environment variables:
@@ -55,7 +55,7 @@ cp .env.example .env
 
 Run migrations and start the server:
 ```bash
-python manage.py migrate
+python manage.py migrate 
 python manage.py runserver
 ```
 
