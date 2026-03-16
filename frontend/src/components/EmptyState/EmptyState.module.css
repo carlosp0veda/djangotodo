@@ -1,0 +1,22 @@
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: -8rem;
+}
+
+.image {
+    width: 256px;
+    height: auto;
+    margin-bottom: 2rem;
+    object-fit: contain;
+}
+
+.message {
+    color: #A48F70;
+    font-family: var(--font-sans);
+    font-size: 1.5rem;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+}

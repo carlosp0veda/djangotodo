@@ -1,0 +1,21 @@
+# llms.txt
+
+> **Note to LLMs and AI Agents:** This file provides essential high-level context about this repository. Read this file to understand the overarching structure and goals of the project before writing code or proposing architectural changes.
+
+## Project Overview
+This repository contains a full-stack web application. The primary goal is to provide a robust, maintainable, and scalable foundation. 
+
+## Structure
+The project is strictly separated into frontend and backend directories:
+- `/frontend/` - Contains the user interface and client-side logic.
+- `/backend/` - Contains the server, API, business logic, and database models.
+
+## Core Philosophy
+1. **Separation of Concerns:** The frontend and backend communicate strictly via API boundaries.
+2. **Readability:** Code should be easy to read and understand by humans and AI alike.
+3. **Robustness:** Prefer explicit types, validation, and comprehensive error handling.
+
+## AI Assistant Guidelines
+- Always verify the current state of the `/frontend` or `/backend` directories before proposing dependencies or commands, as the specific technologies used within those directories may evolve.
+- Default to standard, community-accepted patterns for whatever framework is discovered within the respective directories.
+- When generating files, respect the directory boundaries. Do not mix frontend build configs into the backend, and vice versa.

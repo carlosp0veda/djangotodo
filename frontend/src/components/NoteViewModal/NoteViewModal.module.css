@@ -1,0 +1,167 @@
+.panel {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 16px;
+    border: 3px solid var(--card-border);
+    box-shadow: var(--shadow-md);
+    display: flex;
+    flex-direction: column;
+    padding: 2rem;
+    overflow: hidden;
+    transition: background-color 300ms, border-color 300ms;
+}
+
+@media (min-width: 1024px) {
+    .panel {
+        padding: 3.5rem;
+    }
+}
+
+.lastEditedContainer {
+    position: absolute;
+    top: 2rem;
+    right: 2rem;
+    z-index: 10;
+}
+
+@media (min-width: 1024px) {
+    .lastEditedContainer {
+        top: 3.5rem;
+        right: 3.5rem;
+    }
+}
+
+.lastEdited {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: color-mix(in srgb, var(--foreground) 60%, transparent);
+    letter-spacing: 0.05em;
+    font-family: var(--font-sans);
+}
+
+.closeBtn {
+    padding: 0.5rem;
+    color: color-mix(in srgb, var(--foreground) 40%, transparent);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color var(--transition-fast), transform var(--transition-fast);
+}
+
+.closeBtn:hover {
+    color: var(--foreground);
+    transform: scale(1.1);
+}
+
+.closeBtn:active {
+    transform: scale(0.9);
+}
+
+/* Main content */
+.content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    max-width: 56rem;
+    max-height: 100%;
+    overflow-y: auto;
+    width: 100%;
+    position: relative;
+    z-index: 0;
+    padding-right: 1rem;
+}
+
+.content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.content::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 20px;
+}
+
+.content::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+.titleInput {
+    font-size: 2.625rem;
+    font-family: var(--font-inria);
+    font-weight: 700;
+    color: var(--foreground);
+    background: transparent;
+    border: none;
+    outline: none;
+    margin-bottom: 2rem;
+    width: 100%;
+}
+
+@media (min-width: 1024px) {
+    .titleInput {
+        font-size: 3.5rem;
+    }
+}
+
+.titleInput::placeholder {
+    color: color-mix(in srgb, var(--foreground) 30%, transparent);
+}
+
+.bodyInput {
+    flex: 1;
+    font-size: 1.125rem;
+    color: color-mix(in srgb, var(--foreground) 80%, transparent);
+    font-family: var(--font-sans);
+    line-height: 1.7;
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    min-height: 300px;
+}
+
+.bodyInput::placeholder {
+    color: color-mix(in srgb, var(--foreground) 40%, transparent);
+}
+
+/* FAB save button */
+.saveFab {
+    position: absolute;
+    bottom: 2rem;
+    right: 2rem;
+    width: 3.5rem;
+    height: 3.5rem;
+    background-color: #2A2A2A;
+    color: #ffffff;
+    border: none;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-md);
+    cursor: pointer;
+    transition: transform var(--transition-fast);
+    z-index: 10;
+}
+
+@media (min-width: 1024px) {
+    .saveFab {
+        bottom: 3.5rem;
+        right: 3.5rem;
+    }
+}
+
+.saveFab:hover {
+    transform: scale(1.05);
+}
+
+.saveFab:active {
+    transform: scale(0.95);
+}

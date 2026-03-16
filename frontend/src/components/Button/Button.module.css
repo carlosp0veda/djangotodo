@@ -1,0 +1,30 @@
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.625em 1.5em;
+    border-radius: 9999px;
+    font-weight: 700;
+    font-size: 1rem;
+    transition: background-color var(--transition-fast), border-color var(--transition-fast);
+    border: 2px solid #957139;
+    cursor: pointer;
+    background-color: transparent;
+    color: #957139;
+}
+
+.btn:hover {
+    background-color: rgba(149, 113, 57, 0.2);
+}
+
+.iconWrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: -0.25rem;
+}
+
+.fluid {
+    width: 100%;
+}
