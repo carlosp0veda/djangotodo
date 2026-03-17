@@ -33,10 +33,11 @@ const NoteCard: React.FC<NoteCardProps> = ({ todo, onToggleComplete, onDelete })
     const borderColor = getBorderColor(todo.category?.color);
 
     return (
-        <div
+        <article
             onClick={() => store.setEditingTodoId(todo.id)}
             className={styles.card}
             style={{ backgroundColor: bgColor, borderColor: borderColor }}
+            data-testid="note-card"
         >
             <div className={styles.header}>
                 <span className={styles.date}>
@@ -49,7 +50,7 @@ const NoteCard: React.FC<NoteCardProps> = ({ todo, onToggleComplete, onDelete })
                 )}
             </div>
 
-            <h3 className={styles.title}>
+            <h3 className={styles.title} data-testid="note-title">
                 {todo.title}
             </h3>
 
@@ -78,7 +79,7 @@ const NoteCard: React.FC<NoteCardProps> = ({ todo, onToggleComplete, onDelete })
                     </svg>
                 </button>
             </div>
-        </div>
+        </article>
     );
 };
 
