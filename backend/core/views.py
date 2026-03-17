@@ -3,25 +3,42 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import serializers
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from django.contrib.auth import get_user_model
-
+from rest_framework.permissions import AllowAny, IsAuthenticated        
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from django.contrib.auth import get_user_model
+from django.db import connections
+from django.db.utils import OperationalError    
 
 User = get_user_model()
 
-def set_refresh_cookie(response: Response, refresh_token: str) -> None:
-    cookie_max_age = 3600 * 24 * 7 # 7 days
-    response.set_cookie(
-        settings.SIMPLE_JWT['AUTH_COOKIE'],
-        refresh_token,
-        max_age=cookie_max_age,
-        secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
-        httponly=settings.SIMPLE_JWT['AUTH_COOKIE_HTTP_ONLY'],
-        samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE'],
-        path=settings.SIMPLE_JWT['AUTH_COOKIE_PATH'],
-    )
+def set_auth_cookies(response: Response, access_token: str = None, refresh_token: str = None) -> None:
+    """
+    Centralized utility to set JWT cookies (access and refresh).
+    """
+    cookie_settings = settings.SIMPLE_JWT
+    
+    if refresh_token:
+        response.set_cookie(
+            cookie_settings['AUTH_COOKIE'],
+            refresh_token,
+            max_age=int(cookie_settings['REFRESH_TOKEN_LIFETIME'].total_seconds()),
+            secure=cookie_settings['AUTH_COOKIE_SECURE'],
+            httponly=cookie_settings['AUTH_COOKIE_HTTP_ONLY'],
+            samesite=cookie_settings['AUTH_COOKIE_SAMESITE'],
+            path=cookie_settings['AUTH_COOKIE_PATH'],
+        )
+        
+    if access_token:
+        response.set_cookie(
+            'access_token',
+            access_token,
+            max_age=int(cookie_settings['ACCESS_TOKEN_LIFETIME'].total_seconds()),
+            secure=cookie_settings['AUTH_COOKIE_SECURE'],
+            httponly=True,  # Always HttpOnly for access token
+            samesite=cookie_settings['AUTH_COOKIE_SAMESITE'],
+            path=cookie_settings['AUTH_COOKIE_PATH'],
+        )
 
 class RegisterApi(APIView):
     permission_classes = [AllowAny]
@@ -54,27 +71,7 @@ class RegisterApi(APIView):
             status=status.HTTP_201_CREATED
         )
         
-        # Set Access Token Cookie
-        response.set_cookie(
-            'access_token',
-            access_token,
-            max_age=settings.SIMPLE_JWT.get('ACCESS_TOKEN_LIFETIME').total_seconds(),
-            httponly=True,
-            samesite='Lax', 
-            secure=not settings.DEBUG,
-            path=settings.SIMPLE_JWT.get('AUTH_COOKIE_PATH', '/'),
-        )
-        
-        # Set Refresh Token Cookie
-        response.set_cookie(
-            'refresh_token',
-            refresh_token,
-            max_age=settings.SIMPLE_JWT.get('REFRESH_TOKEN_LIFETIME').total_seconds(),
-            httponly=True,
-            samesite='Lax',
-            secure=not settings.DEBUG,
-            path=settings.SIMPLE_JWT.get('AUTH_COOKIE_PATH', '/'),
-        )
+        set_auth_cookies(response, access_token=access_token, refresh_token=refresh_token)
         
         return response
 
@@ -84,21 +81,10 @@ class LoginApi(TokenObtainPairView):
         
         if response.status_code == 200:
             refresh = response.data.pop('refresh', None)
-            if refresh:
-                set_refresh_cookie(response, refresh)
-            
             access = response.data.pop('access', None)
-            if access:
-                response.set_cookie(
-                    'access_token',
-                    access,
-                    max_age=int(settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'].total_seconds()),
-                    httponly=True,
-                    samesite=settings.SIMPLE_JWT.get('AUTH_COOKIE_SAMESITE', 'Lax'),
-                    secure=settings.SIMPLE_JWT.get('AUTH_COOKIE_SECURE', False),
-                    path=settings.SIMPLE_JWT.get('AUTH_COOKIE_PATH', '/'),
-                )
-                
+            
+            set_auth_cookies(response, access_token=access, refresh_token=refresh)
+            
             response.data['message'] = "Successfully logged in."
             
         return response
@@ -127,31 +113,11 @@ class CookieTokenObtainPairView(TokenObtainPairView):
         response = super().post(request, *args, **kwargs)
         
         if response.status_code == 200:
-            access_token = response.data.get('access')
-            refresh_token = response.data.get('refresh')
+            access_token = response.data.pop('access', None)
+            refresh_token = response.data.pop('refresh', None)
             
-            response.set_cookie(
-                'access_token',
-                access_token,
-                max_age=settings.SIMPLE_JWT.get('ACCESS_TOKEN_LIFETIME').total_seconds(),
-                httponly=True,
-                samesite='Lax',
-                secure=not settings.DEBUG,
-                path=settings.SIMPLE_JWT.get('AUTH_COOKIE_PATH', '/'),
-            )
+            set_auth_cookies(response, access_token=access_token, refresh_token=refresh_token)
             
-            response.set_cookie(
-                'refresh_token',
-                refresh_token,
-                max_age=settings.SIMPLE_JWT.get('REFRESH_TOKEN_LIFETIME').total_seconds(),
-                httponly=True,
-                samesite='Lax',
-                secure=not settings.DEBUG,
-                path=settings.SIMPLE_JWT.get('AUTH_COOKIE_PATH', '/'),
-            )
-            
-            del response.data['access']
-            del response.data['refresh']
             response.data['message'] = "Successfully authenticated."
             
         return response
@@ -164,19 +130,31 @@ class CookieTokenRefreshView(TokenRefreshView):
         response = super().post(request, *args, **kwargs)
         
         if response.status_code == 200:
-            access_token = response.data.get('access')
+            access_token = response.data.pop('access', None)
+            set_auth_cookies(response, access_token=access_token)
             
-            response.set_cookie(
-                'access_token',
-                access_token,
-                max_age=settings.SIMPLE_JWT.get('ACCESS_TOKEN_LIFETIME').total_seconds(),
-                httponly=True,
-                samesite='Lax',
-                secure=not settings.DEBUG,
-                path=settings.SIMPLE_JWT.get('AUTH_COOKIE_PATH', '/'),
-            )
-            
-            if 'access' in response.data:
-                del response.data['access']
-                
         return response
+
+class HealthCheckApi(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        db_conn = connections['default']
+        try:
+            db_conn.cursor()
+        except OperationalError:
+            return Response(
+                {
+                    "status": "unhealthy",
+                    "database": "unreachable"
+                },
+                status=status.HTTP_503_SERVICE_UNAVAILABLE
+            )
+        
+        return Response(
+            {
+                "status": "healthy",
+                "database": "reachable"
+            },
+            status=status.HTTP_200_OK
+        ) 

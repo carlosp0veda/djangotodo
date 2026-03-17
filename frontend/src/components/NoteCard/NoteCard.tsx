@@ -1,53 +1,9 @@
 import React from 'react';
-import { Todo } from '../../lib/types';
+import { NoteCardProps } from '@/types';
 import { useTodoStore } from '../../store/useTodoStore';
+import { formatDate, getBackgroundColor, getBorderColor } from '@/utils';
 import styles from './NoteCard.module.css';
 
-interface NoteCardProps {
-    todo: Todo;
-    onToggleComplete: (id: number, currentStatus: boolean) => void;
-    onDelete: (id: number) => void;
-}
-
-const formatDate = (dateString: string) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    const isSameDay = (d1: Date, d2: Date) =>
-        d1.getFullYear() === d2.getFullYear() &&
-        d1.getMonth() === d2.getMonth() &&
-        d1.getDate() === d2.getDate();
-
-    if (isSameDay(date, today)) {
-        return 'today';
-    } else if (isSameDay(date, yesterday)) {
-        return 'yesterday';
-    } else {
-        return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
-    }
-};
-
-const getBackgroundColor = (color?: string | null) => {
-    if (!color) return 'var(--card-bg)';
-    return color;
-};
-
-const getBorderColor = (color?: string | null) => {
-    if (!color) return 'var(--card-border)';
-    if (color.startsWith('#') && color.length === 7) {
-        let r = parseInt(color.slice(1, 3), 16);
-        let g = parseInt(color.slice(3, 5), 16);
-        let b = parseInt(color.slice(5, 7), 16);
-        r = Math.floor(r * 0.9);
-        g = Math.floor(g * 0.9);
-        b = Math.floor(b * 0.9);
-        return `rgb(${r}, ${g}, ${b})`;
-    }
-    return color;
-};
 
 export const NoteCard: React.FC<NoteCardProps> = ({ todo, onToggleComplete, onDelete }) => {
     const store = useTodoStore();

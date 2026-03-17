@@ -1,14 +1,6 @@
 import React, { useEffect } from 'react';
+import { ModalOverlayProps } from '@/types';
 import styles from './ModalOverlay.module.css';
-
-interface ModalOverlayProps {
-    children: React.ReactNode;
-    onClose: () => void;
-    headerLeft?: React.ReactNode;
-    headerRight?: React.ReactNode;
-    closeOnOutsideClick?: boolean;
-    closeOnEsc?: boolean;
-}
 
 export const ModalOverlay: React.FC<ModalOverlayProps> = ({
     children,
@@ -36,13 +28,21 @@ export const ModalOverlay: React.FC<ModalOverlayProps> = ({
     };
 
     return (
-        <div className={styles.overlay} onClick={closeOnOutsideClick ? onClose : undefined}>
+        <div 
+            className={styles.overlay} 
+            onClick={closeOnOutsideClick ? onClose : undefined}
+            data-testid="modal-overlay"
+        >
             <div className={styles.container}>
                 <div className={styles.header}>
                     <div className={styles.headerLeft}>{headerLeft}</div>
                     <div className={styles.headerRight}>{headerRight}</div>
                 </div>
-                <div className={styles.panel} onClick={handlePanelClick}>
+                <div 
+                    className={styles.panel} 
+                    onClick={handlePanelClick}
+                    data-testid="modal-panel"
+                >
                     {children}
                 </div>
             </div>

@@ -2,12 +2,13 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
+  output: "standalone",
   reactCompiler: true,
   async rewrites() {
     return [
       {
         source: "/api/:path*",
-        destination: `${process.env.DJANGO_API_URL}/api/:path*`, // Proxy to Backend
+        destination: `${process.env.DJANGO_API_URL || 'http://localhost:8000'}/api/:path*`, // Proxy to Backend
 
       },
     ];

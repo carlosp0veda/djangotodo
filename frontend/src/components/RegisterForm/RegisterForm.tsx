@@ -2,13 +2,10 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { RegisterFormProps } from "@/types";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/Button/Button";
 import styles from "./RegisterForm.module.css";
-
-interface RegisterFormProps {
-    onSwitchToLogin: () => void;
-}
 
 export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
     const [email, setEmail] = useState("");

@@ -1,4 +1,4 @@
-import { Category, Todo, TodoInput } from "./types";
+import { Category, Todo, TodoInput } from "@/types";
 import Cookies from "js-cookie";
 
 const getCsrfToken = () => {

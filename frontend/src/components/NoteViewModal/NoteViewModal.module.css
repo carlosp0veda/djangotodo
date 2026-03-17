@@ -165,3 +165,53 @@
 .saveFab:active {
     transform: scale(0.95);
 }
+
+.dictationBtn {
+    position: absolute;
+    bottom: 6.5rem;
+    right: 2rem;
+    width: 3.5rem;
+    height: 3.5rem;
+    background-color: var(--card-bg);
+    color: var(--foreground);
+    border: 2px solid var(--card-border);
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    z-index: 10;
+}
+
+@media (min-width: 1024px) {
+    .dictationBtn {
+        bottom: 8.5rem;
+        right: 3.5rem;
+    }
+}
+
+.dictationBtn:hover {
+    transform: scale(1.05);
+    background-color: var(--card-border);
+}
+
+.dictationBtn.listening {
+    background-color: #ff4d4d;
+    color: white;
+    border-color: #ff4d4d;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 77, 77, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 15px rgba(255, 77, 77, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 77, 77, 0);
+    }
+}

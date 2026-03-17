@@ -19,6 +19,45 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - todo-network
+
+  backend:
+    build:
+      context: ./backend
+    container_name: django_backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+    ports:
+      - "8000:8000"
+    networks:
+      - todo-network
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        - DJANGO_API_URL=http://backend:8000
+    container_name: next_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    env_file: .env
+    environment:
+      - DJANGO_API_URL=http://backend:8000
+    ports:
+      - "3000:3000"
+    networks:
+      - todo-network
+
+networks:
+  todo-network:
+    driver: bridge
 
 volumes:
   postgres_data:

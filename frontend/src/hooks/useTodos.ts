@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { todosApi, categoriesApi } from "../lib/api";
-import { Todo, TodoInput } from "../lib/types";
+import { Todo, TodoInput } from "@/types";
 
 // Queries
 export function useTodosQuery(categoryId?: number | null) {

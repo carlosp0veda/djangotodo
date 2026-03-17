@@ -25,71 +25,47 @@ Before you begin, ensure you have the following installed:
 
 ## 🚦 Getting Started
 
-### 0. Database Setup
+### 0. Full Stack Setup (Recommended)
 
-This project uses PostgreSQL managed via Docker. Before running the application, make sure you have the database running:
+The easiest way to run the entire application is using Docker Compose. This starts the database, backend, and frontend with a single command:
 
 ```bash
-# Start the PostgreSQL service
-docker compose up -d
+docker compose up --build
+```
+
+- **Frontend**: [http://localhost:3000](http://localhost:3000)
+- **Backend API**: [http://localhost:8000/api/](http://localhost:8000/api/)
+- **Database**: Port 5432
+
+### 1. Database Only (Development)
+
+If you prefer to run services locally for development:
+
+```bash
+# Start only the PostgreSQL service
+docker compose up -d db
 ```
 
 The database must be healthy and running before you proceed with backend migrations.
 
-### 1. Backend Setup
+### 2. Backend Setup
+... (rest of the content)
 
-Navigate to the backend directory and set up your Python environment:
+## 🧪 Testing
 
-```bash
-cd backend
-python -m venv .venv # or python3 -m venv .venv
-source .venv/bin/activate  # On Windows use `.venv\Scripts\activate`
-pip install -r requirements.txt # or pip3 install -r requirements.txt
-```
-
-Set up your environment variables:
-```bash
-cp .env.example .env
-# Edit .env with your local credentials
-```
-
-Run migrations and start the server:
-```bash
-python manage.py migrate 
-python manage.py runserver
-```
-
-> [!TIP]
-> **Permission Issues?** If you encounter permission errors or "command not found" when running `python` or `pip`, try using the absolute path to the virtual environment's Python binary:
-> ```bash
-> # Instead of 'python' or 'pip'
-> ./backend/.venv/bin/python3 manage.py migrate
-> ./backend/.venv/bin/python3 manage.py runserver
-> ```
-
-### 2. Frontend Setup
-
-In a new terminal, navigate to the frontend directory:
-
+### Frontend
+Run unit tests for hooks and components:
 ```bash
 cd frontend
-pnpm install
+pnpm test
 ```
 
-Set up your environment variables:
+### Backend
+Run Django unit tests:
 ```bash
-cp .env.example .env.local
-# Edit .env.local with your backend API URL
-```
-
-Start the designated development server:
-```bash
-pnpm dev
+cd backend
+python manage.py test
 ```
 
 ## 🤖 AI-Aware Project
-
-This repository includes configuration files intended to assist AI coding tools (e.g., Cursor, Windsurf, GitHub Copilot).
-
-*   `llms.txt`: Project context and structure overview.
-*   `AGENTS.md`: Useful commands and instructions for AI agents.
+...

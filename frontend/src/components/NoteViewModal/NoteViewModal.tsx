@@ -1,36 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTodoStore } from '../../store/useTodoStore';
 import { useTodosQuery, useCategoriesQuery, useUpdateTodoMutation, useAddTodoMutation } from '../../hooks/useTodos';
 import { CategoryDropdown } from '../CategoryDropdown/CategoryDropdown';
 import { ModalOverlay } from '../ModalOverlay/ModalOverlay';
+import { getBackgroundColor, getBorderColor, formatLastEdited } from '@/utils';
+import { WindowWithSpeech, ISpeechRecognition, SpeechRecognitionEvent, SpeechRecognitionErrorEvent } from '@/types';
 import styles from './NoteViewModal.module.css';
 
-const getBackgroundColor = (color?: string | null) => {
-    if (!color) return 'var(--card-bg)';
-    return color;
-};
 
-const getBorderColor = (color?: string | null) => {
-    if (!color) return 'var(--card-border)';
-    if (color.startsWith('#') && color.length === 7) {
-        let r = parseInt(color.slice(1, 3), 16);
-        let g = parseInt(color.slice(3, 5), 16);
-        let b = parseInt(color.slice(5, 7), 16);
-        r = Math.floor(r * 0.9);
-        g = Math.floor(g * 0.9);
-        b = Math.floor(b * 0.9);
-        return `rgb(${r}, ${g}, ${b})`;
-    }
-    return color;
-};
-
-const formatLastEdited = (dateString?: string) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    const time = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).toLowerCase();
-    const formattedDate = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-    return `Last Edited: ${formattedDate} at ${time}`;
-};
 
 export const NoteViewModal: React.FC = () => {
     const store = useTodoStore();
@@ -48,6 +25,71 @@ export const NoteViewModal: React.FC = () => {
     const [description, setDescription] = useState(originalNote?.description || '');
     const [categoryId, setCategoryId] = useState<number | null>(originalNote?.category?.id || null);
     const [hasChanges, setHasChanges] = useState(false);
+    const [isListening, setIsListening] = useState(false);
+    const recognitionRef = useRef<ISpeechRecognition | null>(null);
+
+    useEffect(() => {
+        const SpeechRecognition = (window as unknown as WindowWithSpeech).SpeechRecognition ||
+            (window as unknown as WindowWithSpeech).webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            const recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+
+            recognition.onresult = (event: SpeechRecognitionEvent) => {
+                let finalTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript;
+                    }
+                }
+                if (finalTranscript) {
+                    setDescription((prev: string) => {
+                        const newText = prev + (prev.length > 0 && !prev.endsWith(' ') ? ' ' : '') + finalTranscript;
+                        return newText;
+                    });
+                    setHasChanges(true);
+                }
+            };
+
+            recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+                console.error('Speech recognition error', event.error);
+                setIsListening(false);
+            };
+
+            recognition.onend = () => {
+                setIsListening(false);
+            };
+
+            recognitionRef.current = recognition;
+        }
+
+        return () => {
+            if (recognitionRef.current) {
+                recognitionRef.current.stop();
+            }
+        };
+    }, []);
+
+    const toggleListening = () => {
+        if (!recognitionRef.current) {
+            alert('Speech Recognition is not supported in this browser.');
+            return;
+        }
+
+        if (isListening) {
+            recognitionRef.current.stop();
+        } else {
+            try {
+                recognitionRef.current.start();
+                setIsListening(true);
+            } catch (error) {
+                console.error('Failed to start recognition', error);
+                setIsListening(false);
+            }
+        }
+    };
 
     if (noteId === null || (!isNewNote && !originalNote)) return null;
 
@@ -108,6 +150,7 @@ export const NoteViewModal: React.FC = () => {
                 <button
                     onClick={handleSaveAndClose}
                     className={styles.closeBtn}
+                    title="Save changes"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M18 6 6 18" /><path d="m6 6 12 12" />
@@ -145,21 +188,18 @@ export const NoteViewModal: React.FC = () => {
                     />
                 </div>
 
-                {/* Save FAB */}
+                {/* Dictation FAB */}
                 <button
-                    onClick={handleSaveAndClose}
-                    className={styles.saveFab}
-                    title={hasChanges ? "Save changes" : "Close note"}
+                    onClick={toggleListening}
+                    className={`${styles.dictationBtn} ${isListening ? styles.listening : ''}`}
+                    title={isListening ? "Stop listening" : "Start dictation"}
+                    type="button"
                 >
-                    {hasChanges ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" />
-                        </svg>
-                    ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3" />
-                        </svg>
-                    )}
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" fill={isListening ? "currentColor" : "none"} />
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                        <line x1="12" x2="12" y1="19" y2="22" />
+                    </svg>
                 </button>
             </div>
         </ModalOverlay>

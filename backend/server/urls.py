@@ -17,10 +17,18 @@ Including another URLconf
 from django.conf import settings
 from django.contrib import admin
 from django.urls import path, include
-from core.views import RegisterApi, LoginApi, LogoutApi, CookieTokenObtainPairView, CookieTokenRefreshView
+from core.views import (
+    RegisterApi, 
+    LoginApi, 
+    LogoutApi, 
+    CookieTokenObtainPairView, 
+    CookieTokenRefreshView,
+    HealthCheckApi
+)
 
 urlpatterns = [
     path(settings.ADMIN_PATH, admin.site.urls),
+    path('health', HealthCheckApi.as_view(), name='health_check'),
     path('api/register', RegisterApi.as_view(), name='register'),
     path('api/login', LoginApi.as_view(), name='login'),
     path('api/token', CookieTokenObtainPairView.as_view(), name='token_obtain_pair'),

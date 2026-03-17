@@ -1,10 +1,6 @@
-import React, { ButtonHTMLAttributes } from 'react';
+import React from 'react';
+import { ButtonProps } from '@/types';
 import styles from './Button.module.css';
-
-export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-    icon?: React.ReactNode;
-    fluid?: boolean;
-}
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ({ className = '', fluid = false, icon, children, ...props }, ref) => {

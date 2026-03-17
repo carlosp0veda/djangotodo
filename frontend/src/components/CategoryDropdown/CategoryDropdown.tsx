@@ -1,12 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Category } from '../../lib/types';
+import { CategoryDropdownProps } from '@/types';
 import styles from './CategoryDropdown.module.css';
-
-interface CategoryDropdownProps {
-    categories: Category[];
-    selectedCategoryId: number | null;
-    onChange: (id: number | null) => void;
-}
 
 export const CategoryDropdown: React.FC<CategoryDropdownProps> = ({
     categories,
