@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { CategoryDropdownProps } from '@/types';
 import styles from './CategoryDropdown.module.css';
 
-export const CategoryDropdown: React.FC<CategoryDropdownProps> = ({
+const CategoryDropdown: React.FC<CategoryDropdownProps> = ({
     categories,
     selectedCategoryId,
     onChange
@@ -96,3 +96,5 @@ export const CategoryDropdown: React.FC<CategoryDropdownProps> = ({
         </div>
     );
 };
+
+export default CategoryDropdown;

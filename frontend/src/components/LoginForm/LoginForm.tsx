@@ -4,10 +4,10 @@ import { useState } from "react";
 import Image from "next/image";
 import { LoginFormProps } from "@/types";
 import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/Button/Button";
+import Button from "@/components/Button/Button";
 import styles from "./LoginForm.module.css";
 
-export default function LoginForm({ onSwitchToRegister }: LoginFormProps) {
+const LoginForm = ({ onSwitchToRegister }: LoginFormProps) => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
@@ -15,7 +15,7 @@ export default function LoginForm({ onSwitchToRegister }: LoginFormProps) {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        login({ email, password });
+        await login({ email, password });
     };
 
     const error = authError ? (authError as Error).message : null;
@@ -107,3 +107,5 @@ export default function LoginForm({ onSwitchToRegister }: LoginFormProps) {
         </div>
     );
 }
+
+export default LoginForm;

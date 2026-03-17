@@ -10,6 +10,14 @@ export function useTodosQuery(categoryId?: number | null) {
     });
 }
 
+export function useTodoQuery(id: number | null) {
+    return useQuery({
+        queryKey: ["todo", id],
+        queryFn: () => (id ? todosApi.get(id) : Promise.reject("Invalid ID")),
+        enabled: !!id,
+    });
+}
+
 export function useCategoriesQuery() {
     return useQuery({
         queryKey: ["categories"],

@@ -8,14 +8,14 @@ import {
     useUpdateTodoMutation,
     useDeleteTodoMutation
 } from "../../hooks/useTodos";
-import { Sidebar } from "../Sidebar";
-import { EmptyState } from "../EmptyState";
-import { Button } from "../Button/Button";
-import { NoteCard } from "../NoteCard";
-import { NoteViewModal } from "../NoteViewModal/NoteViewModal";
+import Sidebar from "../Sidebar";
+import EmptyState from "../EmptyState";
+import Button from "../Button/Button";
+import NoteCard from "../NoteCard";
+import NoteViewModal from "../NoteViewModal/NoteViewModal";
 import styles from "./TodoApp.module.css";
 
-export default function TodoApp() {
+const TodoApp: React.FC = () => {
     const { logout } = useAuth();
     const store = useTodoStore();
 
@@ -147,3 +147,5 @@ export default function TodoApp() {
         </div>
     );
 }
+
+export default TodoApp;

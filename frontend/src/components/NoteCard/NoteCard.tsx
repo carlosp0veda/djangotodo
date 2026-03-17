@@ -5,7 +5,7 @@ import { formatDate, getBackgroundColor, getBorderColor } from '@/utils';
 import styles from './NoteCard.module.css';
 
 
-export const NoteCard: React.FC<NoteCardProps> = ({ todo, onToggleComplete, onDelete }) => {
+const NoteCard: React.FC<NoteCardProps> = ({ todo, onToggleComplete, onDelete }) => {
     const store = useTodoStore();
 
     const renderDescription = (text: string | null) => {
@@ -81,3 +81,5 @@ export const NoteCard: React.FC<NoteCardProps> = ({ todo, onToggleComplete, onDe
         </div>
     );
 };
+
+export default NoteCard;

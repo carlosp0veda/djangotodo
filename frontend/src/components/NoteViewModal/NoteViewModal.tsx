@@ -1,160 +1,118 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { useTodoStore } from '../../store/useTodoStore';
-import { useTodosQuery, useCategoriesQuery, useUpdateTodoMutation, useAddTodoMutation } from '../../hooks/useTodos';
-import { CategoryDropdown } from '../CategoryDropdown/CategoryDropdown';
-import { ModalOverlay } from '../ModalOverlay/ModalOverlay';
+import { useTodoQuery, useCategoriesQuery, useUpdateTodoMutation, useAddTodoMutation } from '../../hooks/useTodos';
+import { useSpeechToText } from '../../hooks/useSpeechToText';
+import CategoryDropdown from '../CategoryDropdown';
+import ModalOverlay from '../ModalOverlay';
 import { getBackgroundColor, getBorderColor, formatLastEdited } from '@/utils';
-import { WindowWithSpeech, ISpeechRecognition, SpeechRecognitionEvent, SpeechRecognitionErrorEvent } from '@/types';
+import { Category, Todo } from '@/types';
 import styles from './NoteViewModal.module.css';
 
+interface NoteViewModalContentProps {
+    originalNote: Todo | null;
+    categories: Category[];
+    isNewNote: boolean;
+    noteId: number | 'new';
+    onClose: () => void;
+}
 
-
-export const NoteViewModal: React.FC = () => {
+const NoteViewModalContent: React.FC<NoteViewModalContentProps> = ({
+    originalNote,
+    categories,
+    isNewNote,
+    noteId
+}) => {
     const store = useTodoStore();
-    const noteId = store.editingTodoId;
-
-    const { data: todos = [] } = useTodosQuery(store.filterCategoryId);
-    const { data: categories = [] } = useCategoriesQuery();
     const updateTodoMutation = useUpdateTodoMutation();
     const addTodoMutation = useAddTodoMutation();
-
-    const isNewNote = noteId === 'new';
-    const originalNote = isNewNote ? null : todos.find(t => t.id === noteId);
 
     const [title, setTitle] = useState(originalNote?.title || '');
     const [description, setDescription] = useState(originalNote?.description || '');
     const [categoryId, setCategoryId] = useState<number | null>(originalNote?.category?.id || null);
     const [hasChanges, setHasChanges] = useState(false);
-    const [isListening, setIsListening] = useState(false);
-    const recognitionRef = useRef<ISpeechRecognition | null>(null);
+    const [isSaving, setIsSaving] = useState(false);
 
-    useEffect(() => {
-        const SpeechRecognition = (window as unknown as WindowWithSpeech).SpeechRecognition ||
-            (window as unknown as WindowWithSpeech).webkitSpeechRecognition;
-        if (SpeechRecognition) {
-            const recognition = new SpeechRecognition();
-            recognition.continuous = true;
-            recognition.interimResults = true;
-            recognition.lang = 'en-US';
-
-            recognition.onresult = (event: SpeechRecognitionEvent) => {
-                let finalTranscript = '';
-                for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    if (event.results[i].isFinal) {
-                        finalTranscript += event.results[i][0].transcript;
-                    }
-                }
-                if (finalTranscript) {
-                    setDescription((prev: string) => {
-                        const newText = prev + (prev.length > 0 && !prev.endsWith(' ') ? ' ' : '') + finalTranscript;
-                        return newText;
-                    });
-                    setHasChanges(true);
-                }
-            };
-
-            recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-                console.error('Speech recognition error', event.error);
-                setIsListening(false);
-            };
-
-            recognition.onend = () => {
-                setIsListening(false);
-            };
-
-            recognitionRef.current = recognition;
+    const { isListening, toggleListening } = useSpeechToText({
+        onTranscript: (transcript) => {
+            setDescription((prev) => {
+                const newText = prev + (prev.length > 0 && !prev.endsWith(' ') ? ' ' : '') + transcript;
+                return newText;
+            });
+            setHasChanges(true);
         }
+    });
 
-        return () => {
-            if (recognitionRef.current) {
-                recognitionRef.current.stop();
-            }
-        };
-    }, []);
-
-    const toggleListening = () => {
-        if (!recognitionRef.current) {
-            alert('Speech Recognition is not supported in this browser.');
-            return;
-        }
-
-        if (isListening) {
-            recognitionRef.current.stop();
-        } else {
-            try {
-                recognitionRef.current.start();
-                setIsListening(true);
-            } catch (error) {
-                console.error('Failed to start recognition', error);
-                setIsListening(false);
-            }
-        }
-    };
-
-    if (noteId === null || (!isNewNote && !originalNote)) return null;
-
-    const currentCategory = categories.find(c => c.id === categoryId);
-    const bgColor = getBackgroundColor(currentCategory?.color);
-    const borderColor = getBorderColor(currentCategory?.color);
+    const validate = () => title.trim().length > 0;
 
     const handleSaveAndClose = async () => {
         if (hasChanges) {
-            if (isNewNote) {
-                if (title.trim()) {
-                    addTodoMutation.mutate({
-                        title,
+            if (!validate()) {
+                store.setEditingTodoId(null);
+                return;
+            }
+
+            setIsSaving(true);
+            try {
+                if (isNewNote) {
+                    await addTodoMutation.mutateAsync({
+                        title: title.trim(),
                         description,
                         category_id: categoryId || undefined
                     });
+                } else {
+                    await updateTodoMutation.mutateAsync({
+                        id: noteId as number,
+                        data: {
+                            title: title.trim(),
+                            description,
+                            category_id: categoryId || undefined
+                        }
+                    });
                 }
-            } else {
-                updateTodoMutation.mutate({
-                    id: noteId as number,
-                    data: {
-                        title,
-                        description,
-                        category_id: categoryId || undefined
-                    }
-                });
+            } catch (error) {
+                console.error('Failed to save todo:', error);
+                setIsSaving(false);
+                return;
             }
         }
         store.setEditingTodoId(null);
     };
 
-    const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setTitle(e.target.value);
-        setHasChanges(true);
-    };
-
-    const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        setDescription(e.target.value);
-        setHasChanges(true);
-    };
-
-    const handleCategorySelect = (id: number | null) => {
-        setCategoryId(id);
-        setHasChanges(true);
-    };
+    const currentCategory = categories.find(c => c.id === categoryId);
+    const bgColor = getBackgroundColor(currentCategory?.color);
+    const borderColor = getBorderColor(currentCategory?.color);
 
     return (
         <ModalOverlay
             onClose={handleSaveAndClose}
+            closeOnEsc={!isSaving}
+            closeOnOutsideClick={!isSaving}
             headerLeft={
                 <CategoryDropdown
                     categories={categories}
                     selectedCategoryId={categoryId}
-                    onChange={handleCategorySelect}
+                    onChange={(id) => {
+                        setCategoryId(id);
+                        setHasChanges(true);
+                    }}
                 />
             }
             headerRight={
                 <button
                     onClick={handleSaveAndClose}
                     className={styles.closeBtn}
-                    title="Save changes"
+                    disabled={isSaving}
+                    title={isSaving ? "Saving..." : "Save and close"}
+                    aria-label="Close modal"
+                    data-testid="close-modal-btn"
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M18 6 6 18" /><path d="m6 6 12 12" />
-                    </svg>
+                    {isSaving ? (
+                        <div className={styles.spinner} />
+                    ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M18 6 6 18" /><path d="m6 6 12 12" />
+                        </svg>
+                    )}
                 </button>
             }
         >
@@ -162,7 +120,6 @@ export const NoteViewModal: React.FC = () => {
                 className={styles.panel}
                 style={{ backgroundColor: bgColor, borderColor: borderColor }}
             >
-                {/* Last Edited (Small, top right inside panel) */}
                 {!isNewNote && originalNote && (
                     <div className={styles.lastEditedContainer}>
                         <span className={styles.lastEdited}>
@@ -171,29 +128,30 @@ export const NoteViewModal: React.FC = () => {
                     </div>
                 )}
 
-                {/* Main Content */}
                 <div className={styles.content}>
                     <input
                         type="text"
                         value={title}
-                        onChange={handleTitleChange}
+                        onChange={(e) => { setTitle(e.target.value); setHasChanges(true); }}
                         placeholder="Note Title"
                         className={styles.titleInput}
+                        disabled={isSaving}
                     />
                     <textarea
                         value={description}
-                        onChange={handleDescriptionChange}
+                        onChange={(e) => { setDescription(e.target.value); setHasChanges(true); }}
                         placeholder="Pour your heart out..."
                         className={styles.bodyInput}
+                        disabled={isSaving}
                     />
                 </div>
 
-                {/* Dictation FAB */}
                 <button
                     onClick={toggleListening}
                     className={`${styles.dictationBtn} ${isListening ? styles.listening : ''}`}
                     title={isListening ? "Stop listening" : "Start dictation"}
                     type="button"
+                    disabled={isSaving}
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" fill={isListening ? "currentColor" : "none"} />
@@ -206,3 +164,28 @@ export const NoteViewModal: React.FC = () => {
     );
 };
 
+const NoteViewModal: React.FC = () => {
+    const store = useTodoStore();
+    const noteId = store.editingTodoId;
+    const isNewNote = noteId === 'new';
+
+    const { data: originalNote, isLoading: isLoadingNote } = useTodoQuery(isNewNote ? null : (noteId as number));
+    const { data: categories = [] } = useCategoriesQuery();
+
+    if (noteId === null) return null;
+    if (!isNewNote && isLoadingNote) return null;
+    if (!isNewNote && !originalNote && !isLoadingNote) return null;
+
+    return (
+        <NoteViewModalContent
+            key={noteId}
+            noteId={noteId}
+            isNewNote={isNewNote}
+            originalNote={originalNote || null}
+            categories={categories}
+            onClose={() => store.setEditingTodoId(null)}
+        />
+    );
+};
+
+export default NoteViewModal;

@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { ModalOverlayProps } from '@/types';
 import styles from './ModalOverlay.module.css';
 
-export const ModalOverlay: React.FC<ModalOverlayProps> = ({
+const ModalOverlay: React.FC<ModalOverlayProps> = ({
     children,
     onClose,
     headerLeft,
@@ -10,7 +10,6 @@ export const ModalOverlay: React.FC<ModalOverlayProps> = ({
     closeOnOutsideClick = false,
     closeOnEsc = false
 }) => {
-    // Handle escape key
     useEffect(() => {
         if (!closeOnEsc) return;
         const handleEsc = (event: KeyboardEvent) => {
@@ -22,14 +21,13 @@ export const ModalOverlay: React.FC<ModalOverlayProps> = ({
         return () => window.removeEventListener('keydown', handleEsc);
     }, [onClose, closeOnEsc]);
 
-    // Prevent propagation when clicking the panel itself
     const handlePanelClick = (e: React.MouseEvent) => {
         e.stopPropagation();
     };
 
     return (
-        <div 
-            className={styles.overlay} 
+        <div
+            className={styles.overlay}
             onClick={closeOnOutsideClick ? onClose : undefined}
             data-testid="modal-overlay"
         >
@@ -38,8 +36,8 @@ export const ModalOverlay: React.FC<ModalOverlayProps> = ({
                     <div className={styles.headerLeft}>{headerLeft}</div>
                     <div className={styles.headerRight}>{headerRight}</div>
                 </div>
-                <div 
-                    className={styles.panel} 
+                <div
+                    className={styles.panel}
                     onClick={handlePanelClick}
                     data-testid="modal-panel"
                 >
@@ -49,3 +47,5 @@ export const ModalOverlay: React.FC<ModalOverlayProps> = ({
         </div>
     );
 };
+
+export default ModalOverlay;

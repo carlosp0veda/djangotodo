@@ -6,7 +6,7 @@ import { useCategoriesQuery } from "../../hooks/useTodos";
 import { useAuth } from "../../hooks/useAuth";
 import styles from "./Sidebar.module.css";
 
-export default function Sidebar() {
+const Sidebar: React.FC = () => {
     const store = useTodoStore();
     const { data: categories = [] } = useCategoriesQuery();
     const { logout } = useAuth();
@@ -49,3 +49,5 @@ export default function Sidebar() {
         </aside>
     );
 }
+
+export default Sidebar;

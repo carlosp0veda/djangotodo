@@ -110,6 +110,7 @@ export const todosApi = {
             method: "PUT",
             body: JSON.stringify(todo),
         }),
+    get: (id: number) => apiFetch<Todo>(`/todos/${id}`),
     delete: (id: number) =>
         apiFetch<void>(`/todos/${id}`, {
             method: "DELETE",

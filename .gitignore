@@ -81,3 +81,9 @@ docker-compose.override.yml
 *.key
 *.cert
 *.crt
+
+# =========================
+# Playwright
+# =========================
+playwright-report/
+test-results/

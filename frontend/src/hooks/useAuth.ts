@@ -99,8 +99,8 @@ export function useAuth(initialIsAuthenticated?: boolean) {
 
     return {
         isAuthenticated,
-        login: loginMutation.mutate,
-        register: registerMutation.mutate,
+        login: loginMutation.mutateAsync,
+        register: registerMutation.mutateAsync,
         isLoading: loginMutation.isPending || registerMutation.isPending,
         error: loginMutation.error || registerMutation.error,
         logout,
