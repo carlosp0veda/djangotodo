@@ -83,6 +83,24 @@ pnpm build
 pnpm lint
 ```
 
+### Testing
+
+- **Strategy**: Pyramid-based (Unit -> Integration -> E2E).
+- **Backend**: Django `APITestCase`. Logic in `services.py`/`selectors.py`.
+- **Frontend**: Vitest for unit/integration (MSW for API). Playwright for E2E.
+- **Coverage**: 70% statements/functions/lines, 60% branches (frontend).
+
+```sh
+# Backend tests
+python manage.py test
+
+# Frontend unit/integration tests
+cd frontend && pnpm test
+
+# Frontend E2E tests
+cd frontend && pnpm e2e
+```
+
 ## API Proxy
 
 Frontend proxies `/api/*` → `http://localhost:8000/api/*` via Next.js rewrites (`next.config.ts`).
